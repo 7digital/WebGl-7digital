@@ -4,7 +4,7 @@ The WebGl code used [Lesson 5][1] from Giles' excellent [Learning WebGl blog][2]
 
 My aim was to pull the cover art and artist images from the 7digital API and map them to the faces of the rotating cube.  This required me to create a simple proxy for the calls to the api so that I could strip out the image urls in a JSON format and to get act as a proxy to avoid cross-domain security issues.  The proxy is extremely simple and written in in C# with Asp.Net MVC2.
 
-Using the following query parameters the images on the cube will update from searching the api.
+Using the following querystring parameters the images on the cube will update from searching the api.
 
 * `searchType`: can either be "artists" or "releases"
 * `search`: the search string, e.g. "radiohead", "pink", "in rainbows"
