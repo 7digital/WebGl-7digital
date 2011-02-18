@@ -1,0 +1,355 @@
+<html>
+
+<head>
+<title>7digital WebGl Cover Flow</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="sylvester.js"></script>
+<script type="text/javascript" src="glUtils.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.min.js"></script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+  #ifdef GL_ES
+  precision highp float;
+  #endif
+
+  varying vec2 vTextureCoord;
+
+  uniform sampler2D uSampler;
+
+  void main(void) {
+    gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+  }
+</script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+  attribute vec3 aVertexPosition;
+  attribute vec2 aTextureCoord;
+
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+
+  varying vec2 vTextureCoord;
+
+
+  void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    vTextureCoord = aTextureCoord;
+  }
+</script>
+
+<script type="text/javascript" >
+
+	function getQuerystring(key, default_)
+	{
+		if (default_==null) default_=""; 
+		key = key.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+		var regex = new RegExp("[\\?&]"+key+"=([^&#]*)");
+		var qs = regex.exec(window.location.href);
+		if(qs == null)
+		return default_;
+		else
+		return qs[1];
+	}
+
+	var apiUrl = 'http://localhost/WebGLInnovation/Xml2Json/images/' 
+					+ getQuerystring("searchType", "artist") 
+					+ "/" + getQuerystring("search");
+
+	var images = []
+		$.getJSON(apiUrl, function(data) {
+			$.each(data, function(key, val) {
+			images.push(val);
+			});
+	});    
+
+	var gl;
+	function initGL(canvas) {
+		try {
+			gl = canvas.getContext("experimental-webgl");
+			gl.viewportWidth = canvas.width;
+			gl.viewportHeight = canvas.height;
+		} catch(e) {
+		}
+		if (!gl) {
+			alert("Could not initialise WebGL, sorry :-(");
+		}
+	}
+
+
+	function getShader(gl, id) {
+		var shaderScript = document.getElementById(id);
+		if (!shaderScript) {
+			return null;
+		}
+
+		var str = "";
+		var k = shaderScript.firstChild;
+		while (k) {
+			if (k.nodeType == 3) {
+				str += k.textContent;
+			}
+			k = k.nextSibling;
+		}
+
+		var shader;
+		if (shaderScript.type == "x-shader/x-fragment") {
+			shader = gl.createShader(gl.FRAGMENT_SHADER);
+		} else if (shaderScript.type == "x-shader/x-vertex") {
+			shader = gl.createShader(gl.VERTEX_SHADER);
+		} else {
+			return null;
+		}
+
+		gl.shaderSource(shader, str);
+		gl.compileShader(shader);
+
+		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+			alert(gl.getShaderInfoLog(shader));
+			return null;
+		}
+
+		return shader;
+	}
+
+
+	var shaderProgram;
+	function initShaders() {
+		var fragmentShader = getShader(gl, "shader-fs");
+		var vertexShader = getShader(gl, "shader-vs");
+
+		shaderProgram = gl.createProgram();
+		gl.attachShader(shaderProgram, vertexShader);
+		gl.attachShader(shaderProgram, fragmentShader);
+		gl.linkProgram(shaderProgram);
+
+		if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+			alert("Could not initialise shaders");
+		}
+
+		gl.useProgram(shaderProgram);
+
+		shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+		gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+		shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+		gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
+
+		shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+		shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+		shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+	}
+
+	function handleLoadedTexture(texture) {
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	}
+
+	var textures = [images.length];
+	function initTextures() {
+	$.each(textures, function(index, texture)) {
+			texture = gl.createTexture();
+			texture.image = new Image();
+			texture.image.onload = function() {
+				handleLoadedTexture(textures)
+			}
+		texture.image.src = images[index];
+		}
+	}
+
+	var mvMatrix;
+	var mvMatrixStack = [];
+
+	function mvPushMatrix(m) {
+		if (m) {
+			mvMatrixStack.push(m.dup());
+			mvMatrix = m.dup();
+		} else {
+			mvMatrixStack.push(mvMatrix.dup());
+		}
+	}
+
+	function mvPopMatrix() {
+		if (mvMatrixStack.length == 0) {
+			throw "Invalid popMatrix!";
+		}
+		mvMatrix = mvMatrixStack.pop();
+		return mvMatrix;
+	}
+
+	function loadIdentity() {
+		mvMatrix = Matrix.I(4);
+	}
+
+	function multMatrix(m) {
+		mvMatrix = mvMatrix.x(m);
+	}
+
+	function mvTranslate(v) {
+		var m = Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4();
+		multMatrix(m);
+	}
+
+	function mvRotate(ang, v) {
+		var arad = ang * Math.PI / 180.0;
+		var m = Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+		multMatrix(m);
+	}
+
+	var pMatrix;
+	function perspective(fovy, aspect, znear, zfar) {
+		pMatrix = makePerspective(fovy, aspect, znear, zfar);
+	}
+
+	function setMatrixUniforms() {
+		gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
+		gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
+	}
+	
+	var xAxisLocation = 0;
+	function handleKeys() {
+		if (currentlyPressedKeys[39]) {
+			// Right cursor key
+			xAxisLocation += 2;
+		}
+		if (currentlyPressedKeys[37]) {
+			// Left cursor key
+			xAxisLocation -= 2;
+		}
+	}
+
+	var tileVertexPositionBuffer;
+	var tileVertexTextureCoordBuffer;
+	function initBuffers() {
+		tileVertexPositionBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, tileVertexPositionBuffer);
+		vertices = [
+		1.0,  1.0,  0.0,
+		-1.0,  1.0,  0.0,
+		1.0, -1.0,  0.0,
+		-1.0, -1.0,  0.0
+		];
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+		tileVertexPositionBuffer.itemSize = 3;
+		tileVertexPositionBuffer.numItems = 4;
+
+		tileVertexTextureCoordBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, tileVertexTextureCoordBuffer);
+		var textureCoords = [
+		  0.0, 0.0,
+		  1.0, 0.0,
+		  0.0, 1.0,
+		  1.0, 1.0
+		];
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+		tileVertexTextureCoordBuffer.itemSize = 2;
+		tileVertexTextureCoordBuffer.numItems = 4;
+	}
+
+	function Tile(startingOffset) {
+		this.offset = startingOffset;
+	}
+	
+	Tile.prototype.draw = function() {
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, starTexture);
+		gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
+		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, starVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, starVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		setMatrixUniforms();
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, starVertexPositionBuffer.numItems);
+	}
+	
+	Tile.prototype.animate = function(elapsedTime) {
+	}
+	
+	function drawScene() {
+	}
+
+	var lastTime = 0;
+	function animate() {
+		var timeNow = new Date().getTime();
+		if (lastTime != 0) {
+			var elapsed = timeNow - lastTime;
+
+			// animate the 'flow'
+		}
+		lastTime = timeNow;
+	}
+
+	var tiles = [];
+	function initWorldObjects() {
+	var numTiles = images.length;
+
+	for (var i=0; i < numTiles; i++) {
+		tiles.push(new Tile(i * 10));
+		}
+	}
+
+	function drawScene() {
+	}
+	
+	var lastTime = 0;
+	function animate() {
+		var timeNow = new Date().getTime();
+		if (lastTime != 0) {
+			var elapsed = timeNow - lastTime;
+
+			for (var i in tiles) {
+				tiles[i].animate(elapsed);
+			}
+		}
+		lastTime = timeNow;
+	}
+	
+	function tick()	{
+	    handleKeys();
+		drawScene();
+		animate();
+	}
+	
+	function webGLStart() {
+		var canvas = document.getElementById("coverflow-canvas");
+		initGL(canvas);
+		initShaders();
+		initBuffers();
+		initTexture();
+		initWorldObjects();
+		
+		gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+		gl.clearDepth(1.0);
+
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+		
+		document.onkeydown = handleKeyDown;
+		document.onkeyup = handleKeyUp;
+
+
+		setInterval(tick, 15);
+	}
+
+</script>
+
+</head>
+
+
+<body onload="webGLStart();">
+
+  <canvas id="coverFlow-canvas" style="border: none;" width="500" height="500"></canvas>
+
+</body>
+
+</html>
