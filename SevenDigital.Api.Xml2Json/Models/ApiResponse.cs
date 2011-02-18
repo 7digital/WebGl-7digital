@@ -19,6 +19,8 @@ namespace SevenDigital.Api.Xml2Json.Models
 
 		public NameValueCollection Headers { get { return _headers; } }
 
+		public ApiResponse() { }
+
 		public ApiResponse(HttpStatusCode status, string text, NameValueCollection headers) {
 			Xml = new XDocument();
 			StatusCode = status;

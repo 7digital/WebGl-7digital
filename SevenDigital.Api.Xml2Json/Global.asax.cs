@@ -19,9 +19,8 @@ namespace SevenDigital.Api.Xml2Json
 			routes.MapRoute(
 				"Default", // Route name
 				"{controller}/{action}/{search}", // URL with parameters
-				new { controller = "Images", action = "Artists", search = "search" } // Parameter defaults
+				new { controller = "Images", action = "Artist", search = "7515" } // Parameter defaults
 			);
-
 		}
 
 		protected void Application_Start()

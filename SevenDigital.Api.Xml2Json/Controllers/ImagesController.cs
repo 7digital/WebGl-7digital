@@ -15,24 +15,40 @@ namespace SevenDigital.Api.Xml2Json.Controllers
 	[HandleError]
 	public class ImagesController : Controller
 	{
-		public JsonResult Artists(string search = "Eels")
-		{
-			var images = GetImages("artist", search);
-
-			return Json(images, JsonRequestBehavior.AllowGet);
-		}
-
-		public JsonResult Releases(string search = "Daisies of the galaxy")
-		{
-			var images = GetImages("release", search);
-			return Json(images, JsonRequestBehavior.AllowGet);
-		}
-
-		private IEnumerable<string> GetImages(string searchType, string search)
+		public JsonResult Artist(string search)
 		{
 			var apiWrapper = new ApiWrapper();
-			var response = apiWrapper.TryGet(string.Format("/{0}/search?q={1}&imageSize=200", searchType, search));
+			var response = new ApiResponse();
 
+			int id = -1;
+			if (int.TryParse(search, out id))
+				response = apiWrapper.TryGet(string.Format("/artist/releases?artistid={0}&imageSize=200", id));
+			else
+				response = apiWrapper.TryGet(string.Format("/artist/search?q={0}&imageSize=200", search));
+
+			var images = GetImages(response);
+
+			return Json(images, JsonRequestBehavior.AllowGet);
+		}
+
+		public JsonResult Release(string search)
+		{
+			var apiWrapper = new ApiWrapper();
+			var response = new ApiResponse();
+
+			int id = -1;
+			if (int.TryParse(search, out id))
+				response = apiWrapper.TryGet(string.Format("/release/details?releaseid={0}&imageSize=200", id));
+			else
+				response = apiWrapper.TryGet(string.Format("/release/search?q={0}&imageSize=200", search));
+
+			var images = GetImages(response);
+
+			return Json(images, JsonRequestBehavior.AllowGet);
+		}
+
+		private IEnumerable<string> GetImages(ApiResponse response)
+		{
 			var images = response.Xml.Descendants("image").Select(i => i.Value);
 
 			return images;
