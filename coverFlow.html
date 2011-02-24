@@ -7,7 +7,7 @@
 <script type="text/javascript" src="webgl-debug.js"></script>
 <script type="text/javascript" src="sylvester.js"></script>
 <script type="text/javascript" src="glUtils.js"></script>
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.min.js"></script>
+<script type="text/javascript" src="jquery-1.5.js"></script>
 
 <script id="shader-fs" type="x-shader/x-fragment">
   #ifdef GL_ES
@@ -53,16 +53,30 @@
 		return qs[1];
 	}
 
-	var apiUrl = './Xml2Json/images/' 
-					+ getQuerystring("searchType", "artist") 
-					+ "/" + getQuerystring("search");
+	var images = [
+	"http://cdn.7static.com/static/img/sleeveart/00/009/266/0000926617_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/009/267/0000926786_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/009/240/0000924016_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/007/001/0000700179_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/006/972/0000697297_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/000/106/0000010690_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/006/256/0000625656_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/004/248/0000424889_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/004/570/0000457060_200.jpg",
+	"http://cdn.7static.com/static/img/sleeveart/00/004/589/0000458972_200.jpg",
+	]
+	
+	function initApiImages() {
+		var apiUrl = './Xml2Json/images/' 
+						+ getQuerystring("searchType", "artist") 
+						+ "/" + getQuerystring("search");
 
-	var images = []
-		$.getJSON(apiUrl, function(data) {
-			$.each(data, function(key, val) {
-			images.push(val);
-			});
-	});    
+			$.getJSON(apiUrl, function(data) {
+				$.each(data, function(key, val) {
+				images.push(val);
+				});
+		});   
+	}	
 
 	var gl;
 	function initGL(canvas) {
@@ -153,16 +167,18 @@
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
-	var textures = [images.length];
+	var textures = new Array(images.length);
 	function initTextures() {
-	$.each(textures, function(index, texture) {
-			texture = gl.createTexture();
-			texture.image = new Image();
-			texture.image.onload = function() {
-				handleLoadedTexture(textures)
+		for (var i=0; i < textures.length; i++) {
+			textures[i] = gl.createTexture();
+			textures[i].image = new Image();
+			var texture = textures[i];
+			textures[i].image.onload = function() {
+				handleLoadedTexture(texture)
+				//handleLoadedTexture(textures[i])  //How do I get this to work? i = 10 when it gets here...
 			}
-		texture.image.src = images[index];
-		});
+		textures[i].image.src = images[i];
+		}
 	}
 
 	var mvMatrix;
@@ -266,8 +282,14 @@
 	}
 	
 	Tile.prototype.draw = function() {
+		mvPushMatrix();
+
+		// Move to the tile's position
+		//mvTranslate([0.0, this.offset, 0.0]);
+		mvTranslate([0.0, 0.0, 0.0]);
+
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.uniform1i(shaderProgram.samplerUniform, 0);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, tileVertexPositionBuffer);
@@ -276,9 +298,10 @@
 		gl.bindBuffer(gl.ARRAY_BUFFER, tileVertexTextureCoordBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, tileVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 		setMatrixUniforms();
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, tileVertexTextureCoordBuffer.numItems);
+		
+		mvPopMatrix();
 	}
 	
 	Tile.prototype.animate = function(elapsedTime) {
@@ -289,7 +312,7 @@
 	var numTiles = images.length;
 
 	for (var i=0; i < numTiles; i++) {
-		tiles.push(new Tile(i * 10, textures[1]));
+		tiles.push(new Tile(i, textures[i]));
 		}
 	}
 
@@ -334,6 +357,7 @@
 		initGL(canvas);
 		initShaders();
 		initBuffers();
+		//initApiImages();
 		initTextures();
 		initWorldObjects();
 		
