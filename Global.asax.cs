@@ -20,6 +20,12 @@ namespace SevenDigital.WebGl
 
 			routes.MapRoute(
 				"Default", // Route name
+				"{controller}/{action}", // URL with parameters
+				new { controller = "Default", action = "Index" } // Parameter defaults
+			);
+
+			routes.MapRoute(
+				"Images", // Route name
 				"{controller}/{action}/{search}", // URL with parameters
 				new { controller = "Images", action = "Artist", search = "7515" } // Parameter defaults
 			);

@@ -52,8 +52,8 @@ function getQuerystring(key, default_)
 }
 
 var apiUrl = './images/' 
-				+ getQuerystring("searchType", "artist") 
-				+ "/" + getQuerystring("search");
+				+ getQuerystring("searchType", "artist")
+				+ "/" + getQuerystring("search", "7515");
 
 var images = []
 $.getJSON(apiUrl, function(data) {
