@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using SevenDigital.Api.Xml2Json.Models;
+using SevenDigital.WebGl.Models;
 using System.Net;
 using System.IO;
 using System.Configuration;
 
-namespace SevenDigital.Api.Xml2Json.Services
+namespace SevenDigital.WebGl.Services
 {
 	public class ApiWrapper
 	{

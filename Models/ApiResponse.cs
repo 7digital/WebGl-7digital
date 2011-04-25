@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Xml.Linq;
 
-namespace SevenDigital.Api.Xml2Json.Models
+namespace SevenDigital.WebGl.Models
 {
 	public class ApiResponse
 	{

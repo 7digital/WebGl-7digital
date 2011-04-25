@@ -10,8 +10,8 @@
     <ProjectTypeGuids>{F85E285D-A4E0-4152-9332-AB1D724D3325};{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SevenDigital.Api.Xml2Json</RootNamespace>
-    <AssemblyName>SevenDigital.Api.Xml2Json</AssemblyName>
+    <RootNamespace>SevenDigital.WebGl</RootNamespace>
+    <AssemblyName>SevenDigital.WebGl</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
   </PropertyGroup>
@@ -74,8 +74,18 @@
     <Compile Include="Services\ApiWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="coverFlow.html" />
     <Content Include="Global.asax" />
-    <Content Include="Web.config" />
+    <Content Include="index.html" />
+    <Content Include="Static\glMatrix-0.9.5.min.js" />
+    <Content Include="Static\glUtils.js" />
+    <Content Include="Static\jquery-1.5.js" />
+    <Content Include="Static\sylvester.js" />
+    <Content Include="Static\webgl-debug.js" />
+    <Content Include="Static\webgl-utils.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -91,12 +101,11 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>False</UseIIS>
+          <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>51541</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>
-          </IISUrl>
+          <IISUrl>http://localhost/SevenDigital.WebGl</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

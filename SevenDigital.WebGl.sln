@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SevenDigital.Api.Xml2Json", "SevenDigital.Api.Xml2Json.csproj", "{F2FDA9DC-5931-4314-80CF-482A51C3FB68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SevenDigital.WebGl", "SevenDigital.WebGl.csproj", "{F2FDA9DC-5931-4314-80CF-482A51C3FB68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

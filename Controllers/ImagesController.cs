@@ -4,13 +4,13 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Net;
-using SevenDigital.Api.Xml2Json.Models;
+using SevenDigital.WebGl.Models;
 using System.IO;
 using System.Collections.Specialized;
 using System.Configuration;
-using SevenDigital.Api.Xml2Json.Services;
+using SevenDigital.WebGl.Services;
 
-namespace SevenDigital.Api.Xml2Json.Controllers
+namespace SevenDigital.WebGl.Controllers
 {
 	[HandleError]
 	public class ImagesController : Controller
